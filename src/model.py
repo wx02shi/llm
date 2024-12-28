@@ -12,7 +12,6 @@ class AttentionHead(nn.Module):
         d_v,
         seq_len,
         dropout: Optional[float] = 0.0,
-        bias: Optional[bool] = False,
     ):
         """
         Performs the scaled dot-production attention operation
@@ -27,9 +26,9 @@ class AttentionHead(nn.Module):
 
         self.d_k = d_k
         self.seq_len = seq_len
-        self.W_Q = nn.Linear(d_model, d_k, bias=bias)
-        self.W_K = nn.Linear(d_model, d_k, bias=bias)
-        self.W_V = nn.Linear(d_model, d_v, bias=bias)
+        self.W_Q = nn.Linear(d_model, d_k, bias=False)
+        self.W_K = nn.Linear(d_model, d_k, bias=False)
+        self.W_V = nn.Linear(d_model, d_v, bias=False)
         self.register_buffer("tril", torch.tril(torch.ones(seq_len, seq_len)))
         self.dropout = nn.Dropout(dropout)
 
@@ -63,7 +62,6 @@ class MultiheadAttention(nn.Module):
         n_heads,
         seq_len,
         dropout: Optional[float] = 0.0,
-        bias: Optional[bool] = False,
     ):
         super().__init__()
 
@@ -75,12 +73,11 @@ class MultiheadAttention(nn.Module):
                     d_v=d_v,
                     seq_len=seq_len,
                     dropout=dropout,
-                    bias=bias,
                 )
                 for _ in range(n_heads)
             ]
         )
-        self.W_O = nn.Linear(n_heads * d_v, d_model, bias=bias)
+        self.W_O = nn.Linear(n_heads * d_v, d_model, bias=False)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -118,7 +115,6 @@ class DecoderBlock(nn.Module):
         n_heads,
         seq_len,
         dropout: Optional[float] = 0.0,
-        bias: Optional[bool] = False,
     ):
         super().__init__()
 
@@ -129,7 +125,6 @@ class DecoderBlock(nn.Module):
             n_heads=n_heads,
             seq_len=seq_len,
             dropout=dropout,
-            bias=bias,
         )
         self.ffn = FeedForward(d_model=d_model, dropout=dropout)
         self.ln1 = nn.LayerNorm(d_model)
@@ -153,7 +148,6 @@ class GPTLanguageModel(nn.Module):
         n_heads,
         device,
         dropout: Optional[float] = 0.0,
-        bias: Optional[bool] = False,
     ):
         super().__init__()
 
@@ -168,7 +162,6 @@ class GPTLanguageModel(nn.Module):
                     n_heads=n_heads,
                     seq_len=seq_len,
                     dropout=dropout,
-                    bias=bias,
                 )
                 for _ in range(n_layers)
             ]
